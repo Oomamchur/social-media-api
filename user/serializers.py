@@ -6,7 +6,16 @@ from rest_framework.exceptions import ValidationError
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
-        fields = ("id", "username", "email", "password", "is_staff")
+        fields = (
+            "id",
+            "email",
+            "password",
+            "first_name",
+            "last_name",
+            "bio",
+            "other_details",
+            "is_staff",
+        )
         read_only_fields = (
             "id",
             "is_staff",
@@ -28,6 +37,28 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 
+class UserListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = get_user_model()
+        fields = (
+            "id",
+            "first_name",
+            "last_name",
+        )
+
+
+class UserDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = get_user_model()
+        fields = (
+            "id",
+            "first_name",
+            "last_name",
+            "bio",
+            "other_details",
+        )
+
+
 class AuthTokenSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
@@ -40,9 +71,7 @@ class AuthTokenSerializer(serializers.Serializer):
             user = authenticate(email=email, password=password)
 
             if not user:
-                raise ValidationError(
-                    "Unable to log in with provided credentials."
-                )
+                raise ValidationError("Unable to log in with provided credentials.")
         else:
             raise ValidationError("Must include 'email' and 'password'.")
 
