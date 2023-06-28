@@ -46,3 +46,12 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
 
     objects = UserManager()
+
+    first_name = models.CharField(max_length=60)
+    last_name = models.CharField(max_length=60)
+    bio = models.TextField(blank=True)
+    other_details = models.TextField(blank=True)
+
+    def __str__(self) -> str:
+        return f"{self.first_name} {self.last_name}"
+
