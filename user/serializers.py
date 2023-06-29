@@ -14,6 +14,7 @@ class UserSerializer(serializers.ModelSerializer):
             "last_name",
             "bio",
             "other_details",
+            "image",
             "is_staff",
         )
         read_only_fields = (
@@ -44,6 +45,7 @@ class UserListSerializer(serializers.ModelSerializer):
             "id",
             "first_name",
             "last_name",
+            "image",
         )
 
 
