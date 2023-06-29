@@ -23,6 +23,7 @@ class CreateUserView(generics.CreateAPIView):
 class UserListView(generics.ListAPIView):
     queryset = get_user_model().objects.all()
     serializer_class = UserListSerializer
+    pagination_class = UserPagination
 
     def get_queryset(self) -> queryset:
         queryset = super().get_queryset()
