@@ -1,6 +1,8 @@
 import os
 import uuid
 
+from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.db import models
@@ -51,18 +53,52 @@ def user_image_file_path(instance, filename) -> str:
 
 
 class User(AbstractUser):
-    username = None
     email = models.EmailField(_("email"), unique=True)
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
     objects = UserManager()
 
+    username = models.CharField(max_length=60)
     first_name = models.CharField(max_length=60)
     last_name = models.CharField(max_length=60)
     bio = models.TextField(blank=True)
     other_details = models.TextField(blank=True)
     image = models.ImageField(null=True, upload_to=user_image_file_path)
+    user_follow = models.ManyToManyField(
+        "User", blank=True, related_name="user_followers", symmetrical=False
+    )
+
+    @property
+    def followers_count(self):
+        return self.user_followers.count()
+
+    @property
+    def following_count(self):
+        return self.user_follow.count()
+
+    class Meta:
+        ordering = ["first_name", "last_name"]
 
     def __str__(self) -> str:
         return f"{self.first_name} {self.last_name}"
+
+
+def post_image_file_path(instance, filename) -> str:
+    _, extension = os.path.splitext(filename)
+    filename = f"{slugify(instance.hashtag)}-{uuid.uuid4()}{extension}"
+
+    return os.path.join("media/uploads/users/posts", filename)
+
+
+class Post(models.Model):
+    hashtag = models.CharField(max_length=60)
+    text = models.CharField(max_length=255)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, related_name="posts", on_delete=models.CASCADE
+    )
+
+    media_image = models.ImageField(null=True, upload_to=post_image_file_path)
+
+    class Meta:
+        ordering = ["id"]

@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model, authenticate
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from user.models import Post
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -10,12 +12,14 @@ class UserSerializer(serializers.ModelSerializer):
             "id",
             "email",
             "password",
+            "username",
             "first_name",
             "last_name",
             "bio",
             "other_details",
             "image",
             "is_staff",
+            "user_follow",
         )
         read_only_fields = (
             "id",
@@ -38,26 +42,36 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 
-class UserListSerializer(serializers.ModelSerializer):
+class UserListSerializer(UserSerializer):
     class Meta:
         model = get_user_model()
         fields = (
             "id",
+            "username",
             "first_name",
             "last_name",
             "image",
+            "followers_count",
+            "following_count",
         )
 
 
-class UserDetailSerializer(serializers.ModelSerializer):
+class UserDetailSerializer(UserSerializer):
+    user_follow = serializers.StringRelatedField(many=True)
+    user_followers = serializers.StringRelatedField(many=True)
+
     class Meta:
         model = get_user_model()
         fields = (
             "id",
+            "username",
+            "image",
             "first_name",
             "last_name",
             "bio",
             "other_details",
+            "user_follow",
+            "user_followers",
         )
 
 
@@ -79,3 +93,21 @@ class AuthTokenSerializer(serializers.Serializer):
 
         attrs["user"] = user
         return attrs
+
+
+class PostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Post
+        fields = ("id", "hashtag", "text", "user", "media_image")
+
+
+class PostListSerializer(PostSerializer):
+    user_username = serializers.CharField(source="user.username", read_only=True)
+
+    class Meta:
+        model = Post
+        fields = ("id", "hashtag", "text", "user_username", "media_image")
+
+
+class PostDetailSerializer(PostSerializer):
+    user = UserListSerializer(many=False, read_only=True)
