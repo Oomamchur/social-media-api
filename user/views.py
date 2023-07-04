@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from rest_framework import generics, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.response import Response
@@ -19,46 +20,12 @@ from user.serializers import (
     PostSerializer,
     PostDetailSerializer,
     PostListSerializer,
+    UserFollowSerializer,
 )
 
 
 class CreateUserView(generics.CreateAPIView):
     serializer_class = UserSerializer
-
-
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = get_user_model().objects.all()
-    serializer_class = UserSerializer
-    pagination_class = UserPagination
-    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
-
-    def get_serializer_class(self):
-        if self.action == "list":
-            return UserListSerializer
-        if self.action == "retrieve":
-            return UserDetailSerializer
-
-        return UserSerializer
-
-    def get_queryset(self) -> queryset:
-        queryset = super().get_queryset()
-
-        username = self.request.query_params.get("username")
-        if username:
-            queryset = queryset.filter(username__icontains=username)
-
-        first_name = self.request.query_params.get("first_name")
-        if first_name:
-            queryset = queryset.filter(first_name__icontains=first_name)
-
-        last_name = self.request.query_params.get("last_name")
-        if last_name:
-            queryset = queryset.filter(last_name__icontains=last_name)
-
-        if self.action in ("list", "retrieve"):
-            queryset = queryset.prefetch_related("user_follow")
-
-        return queryset.distinct()
 
 
 class CreateTokenView(ObtainAuthToken):
@@ -86,6 +53,62 @@ class LogoutView(APIView):
             return Response(status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = get_user_model().objects.all()
+    serializer_class = UserSerializer
+    pagination_class = UserPagination
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return UserListSerializer
+        if self.action == "retrieve":
+            return UserDetailSerializer
+        if self.action == "follow":
+            return UserFollowSerializer
+
+        return UserSerializer
+
+    def get_queryset(self) -> queryset:
+        queryset = super().get_queryset()
+
+        username = self.request.query_params.get("username")
+        if username:
+            queryset = queryset.filter(username__icontains=username)
+
+        first_name = self.request.query_params.get("first_name")
+        if first_name:
+            queryset = queryset.filter(first_name__icontains=first_name)
+
+        last_name = self.request.query_params.get("last_name")
+        if last_name:
+            queryset = queryset.filter(last_name__icontains=last_name)
+
+        if self.action in ("list", "retrieve"):
+            queryset = queryset.prefetch_related("user_follow")
+
+        return queryset.distinct()
+
+    @action(
+        methods=["PATCH"],
+        detail=True,
+        url_path="follow",
+        permission_classes=(IsAuthenticated,),
+    )
+    def follow(self, request, pk=None):
+        user = self.get_object()
+        follower = self.request.user
+        if follower not in user.user_followers:
+            user.user_followers.add(follower)
+        serializer = self.get_serializer(user, data=request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class PostViewSet(viewsets.ModelViewSet):
