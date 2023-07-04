@@ -19,7 +19,6 @@ class UserSerializer(serializers.ModelSerializer):
             "other_details",
             "image",
             "is_staff",
-            "user_follow",
         )
         read_only_fields = (
             "id",
@@ -76,8 +75,6 @@ class UserDetailSerializer(UserSerializer):
 
 
 class UserFollowSerializer(UserSerializer):
-    user_followers = serializers.StringRelatedField(many=True)
-
     class Meta:
         model = get_user_model()
         fields = (

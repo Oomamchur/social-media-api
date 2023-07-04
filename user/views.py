@@ -100,15 +100,26 @@ class UserViewSet(viewsets.ModelViewSet):
     def follow(self, request, pk=None):
         user = self.get_object()
         follower = self.request.user
-        if follower not in user.user_followers:
+        if user != follower and follower not in user.user_followers.all():
             user.user_followers.add(follower)
-        serializer = self.get_serializer(user, data=request.data)
+            user.save()
 
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    @action(
+        methods=["PATCH"],
+        detail=True,
+        url_path="unfollow",
+        permission_classes=(IsAuthenticated,),
+    )
+    def follow(self, request, pk=None):
+        user = self.get_object()
+        follower = self.request.user
+        if follower in user.user_followers.all():
+            user.user_followers.remove(follower)
+            user.save()
+
+        return Response(status=status.HTTP_200_OK)
 
 
 class PostViewSet(viewsets.ModelViewSet):

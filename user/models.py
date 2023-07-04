@@ -98,24 +98,25 @@ class Post(models.Model):
         related_name="posts",
         on_delete=models.CASCADE
     )
+    created_at = models.DateTimeField(auto_now_add=True)
     media_image = models.ImageField(null=True, upload_to=post_image_file_path)
 
     class Meta:
-        ordering = ["id"]
+        ordering = ["-created_at"]
 
 
-# class Comment(models.Model):
-#     post = models.ForeignKey(
-#         Post,
-#         related_name="comments",
-#         on_delete=models.CASCADE
-#     )
-#     user = models.ForeignKey(
-#         settings.AUTH_USER_MODEL,
-#         related_name="comments",
-#         on_delete=models.CASCADE
-#     )
-#     created_at = models.DateTimeField(auto_now_add=True)
-#
-#     class Meta:
-#         ordering = ["-created_at"]
+class Comment(models.Model):
+    post = models.ForeignKey(
+        Post,
+        related_name="comments",
+        on_delete=models.CASCADE
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="comments",
+        on_delete=models.CASCADE
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
