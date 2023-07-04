@@ -75,6 +75,17 @@ class UserDetailSerializer(UserSerializer):
         )
 
 
+class UserFollowSerializer(UserSerializer):
+    user_followers = serializers.StringRelatedField(many=True)
+
+    class Meta:
+        model = get_user_model()
+        fields = (
+            "id",
+            "user_followers",
+        )
+
+
 class AuthTokenSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
