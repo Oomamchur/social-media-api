@@ -11,7 +11,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from user.models import Post
 from user.pagination import UserPagination, PostPagination
-from user.permissions import IsAdminOrIfAuthenticatedReadOnly
+from user.permissions import IsAdminOrIfAuthenticatedReadOnly, IsCreatorOrReadOnly
 from user.serializers import (
     UserSerializer,
     AuthTokenSerializer,
@@ -125,7 +125,7 @@ class UserViewSet(viewsets.ModelViewSet):
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
     pagination_class = PostPagination
 
     def get_serializer_class(self):
@@ -137,8 +137,10 @@ class PostViewSet(viewsets.ModelViewSet):
         return PostListSerializer
 
     def get_permissions(self):
-        if self.action == "retrieve":
-            return [IsAdminOrIfAuthenticatedReadOnly]
+        if self.action == "create":
+            return [IsAuthenticated()]
+        if self.action in ("update", "partial_update", "destroy"):
+            return [IsCreatorOrReadOnly()]
 
         return super().get_permissions()
 
