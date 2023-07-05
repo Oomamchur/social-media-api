@@ -96,7 +96,7 @@ class Post(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name="posts",
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
     )
     created_at = models.DateTimeField(auto_now_add=True)
     media_image = models.ImageField(null=True, upload_to=post_image_file_path)
@@ -105,15 +105,17 @@ class Post(models.Model):
     def comments_count(self):
         return self.comments.count()
 
+    @property
+    def likes_count(self):
+        return self.likes.filter(is_liked=True).count()
+
     class Meta:
         ordering = ["-created_at"]
 
 
 class Comment(models.Model):
     post = models.ForeignKey(
-        Post,
-        related_name="comments",
-        on_delete=models.CASCADE
+        Post, related_name="comments", on_delete=models.CASCADE
     )
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -128,3 +130,18 @@ class Comment(models.Model):
 
     def __str__(self) -> str:
         return self.text
+
+
+class Like(models.Model):
+    post = models.ForeignKey(
+        Post, related_name="likes", on_delete=models.CASCADE
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="likes",
+        on_delete=models.CASCADE,
+    )
+    is_liked = models.BooleanField()
+
+    class Meta:
+        unique_together = ("post", "user")

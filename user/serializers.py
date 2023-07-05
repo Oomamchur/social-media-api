@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model, authenticate
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from user.models import Post, Comment
+from user.models import Post, Comment, Like
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -95,7 +95,9 @@ class AuthTokenSerializer(serializers.Serializer):
             user = authenticate(email=email, password=password)
 
             if not user:
-                raise ValidationError("Unable to log in with provided credentials.")
+                raise ValidationError(
+                    "Unable to log in with provided credentials."
+                )
         else:
             raise ValidationError("Must include 'email' and 'password'.")
 
@@ -110,11 +112,21 @@ class PostSerializer(serializers.ModelSerializer):
 
 
 class PostListSerializer(PostSerializer):
-    user_username = serializers.CharField(source="user.username", read_only=True)
+    user_username = serializers.CharField(
+        source="user.username", read_only=True
+    )
 
     class Meta:
         model = Post
-        fields = ("id", "hashtag", "text", "user_username", "media_image", "comments_count")
+        fields = (
+            "id",
+            "user_username",
+            "text",
+            "media_image",
+            "hashtag",
+            "likes_count",
+            "comments_count",
+        )
 
 
 class PostDetailSerializer(PostListSerializer):
@@ -122,7 +134,15 @@ class PostDetailSerializer(PostListSerializer):
 
     class Meta:
         model = Post
-        fields = ("id", "hashtag", "text", "user_username", "media_image", "comments")
+        fields = (
+            "id",
+            "user_username",
+            "text",
+            "media_image",
+            "hashtag",
+            "likes_count",
+            "comments",
+        )
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -130,3 +150,8 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ("id", "text")
 
+
+class LikeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Like
+        fields = ("id", "is_liked")
