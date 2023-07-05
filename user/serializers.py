@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model, authenticate
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from user.models import Post
+from user.models import Post, Comment
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -118,4 +118,15 @@ class PostListSerializer(PostSerializer):
 
 
 class PostDetailSerializer(PostListSerializer):
-    pass
+    comments = serializers.StringRelatedField(many=True)
+
+    class Meta:
+        model = Post
+        fields = ("id", "hashtag", "text", "user_username", "media_image", "comments")
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ("id", "text")
+

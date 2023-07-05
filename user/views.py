@@ -9,7 +9,7 @@ from rest_framework.settings import api_settings
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from user.models import Post
+from user.models import Post, Comment
 from user.pagination import UserPagination, PostPagination
 from user.permissions import IsAdminOrIfAuthenticatedReadOnly, IsCreatorOrReadOnly
 from user.serializers import (
@@ -21,6 +21,7 @@ from user.serializers import (
     PostDetailSerializer,
     PostListSerializer,
     UserFollowSerializer,
+    CommentSerializer,
 )
 
 
@@ -98,6 +99,7 @@ class UserViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAuthenticated,),
     )
     def follow(self, request, pk=None):
+        """Endpoint for following specific user"""
         user = self.get_object()
         follower = self.request.user
         if user != follower and follower not in user.user_followers.all():
@@ -113,6 +115,7 @@ class UserViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAuthenticated,),
     )
     def unfollow(self, request, pk=None):
+        """Endpoint for unfollowing specific user"""
         user = self.get_object()
         follower = self.request.user
         if follower in user.user_followers.all():
@@ -133,6 +136,8 @@ class PostViewSet(viewsets.ModelViewSet):
             return PostListSerializer
         if self.action == "retrieve":
             return PostDetailSerializer
+        if self.action == "add_comment":
+            return CommentSerializer
 
         return PostListSerializer
 
@@ -163,6 +168,20 @@ class PostViewSet(viewsets.ModelViewSet):
         )
 
         return queryset
+
+    @action(
+        methods=["POST"],
+        detail=True,
+        url_path="add_comment",
+        permission_classes=(IsAuthenticated,),
+    )
+    def add_comment(self, request, pk=None):
+        """Endpoint for adding comment to specific post"""
+        post = self.get_object()
+        user = self.request.user
+        Comment.objects.create(post=post, user=user, text=request.data["text"])
+
+        return Response(status=status.HTTP_200_OK)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
