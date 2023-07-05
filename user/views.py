@@ -2,16 +2,19 @@ from django.contrib.auth import get_user_model
 from django.db.models import Q
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from user.models import Post, Comment
+from user.models import Post, Comment, Like
 from user.pagination import UserPagination, PostPagination
-from user.permissions import IsAdminOrIfAuthenticatedReadOnly, IsCreatorOrReadOnly
+from user.permissions import (
+    IsAdminOrIfAuthenticatedReadOnly,
+    IsCreatorOrReadOnly,
+)
 from user.serializers import (
     UserSerializer,
     AuthTokenSerializer,
@@ -22,6 +25,7 @@ from user.serializers import (
     PostListSerializer,
     UserFollowSerializer,
     CommentSerializer,
+    LikeSerializer,
 )
 
 
@@ -138,6 +142,8 @@ class PostViewSet(viewsets.ModelViewSet):
             return PostDetailSerializer
         if self.action == "add_comment":
             return CommentSerializer
+        if self.action == "like":
+            return LikeSerializer
 
         return PostListSerializer
 
@@ -164,7 +170,8 @@ class PostViewSet(viewsets.ModelViewSet):
             queryset = queryset.select_related("user")
 
         queryset = queryset.filter(
-            Q(user=self.request.user) | Q(user__in=self.request.user.user_follow.all())
+            Q(user=self.request.user)
+            | Q(user__in=self.request.user.user_follow.all())
         )
 
         return queryset
@@ -180,6 +187,28 @@ class PostViewSet(viewsets.ModelViewSet):
         post = self.get_object()
         user = self.request.user
         Comment.objects.create(post=post, user=user, text=request.data["text"])
+
+        return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["POST"],
+        detail=True,
+        url_path="like",
+        permission_classes=(IsAuthenticated,),
+    )
+    def like(self, request, pk=None):
+        """Endpoint for liking specific post"""
+        post = self.get_object()
+        user = self.request.user
+        try:
+            like = Like.objects.get(post=post, user=user)
+            if like.is_liked:
+                like.is_liked = False
+            else:
+                like.is_liked = True
+            like.save()
+        except Like.DoesNotExist:
+            Like.objects.create(post=post, user=user, is_liked=True)
 
         return Response(status=status.HTTP_200_OK)
 
