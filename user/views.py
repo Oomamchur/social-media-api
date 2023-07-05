@@ -136,6 +136,12 @@ class PostViewSet(viewsets.ModelViewSet):
 
         return PostListSerializer
 
+    def get_permissions(self):
+        if self.action == "retrieve":
+            return [IsAdminOrIfAuthenticatedReadOnly]
+
+        return super().get_permissions()
+
     def get_queryset(self):
         queryset = self.queryset
 
