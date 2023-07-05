@@ -11,6 +11,7 @@ from user.views import (
     LogoutView,
     PostViewSet,
     UserViewSet,
+    LikeList,
 )
 
 router = routers.DefaultRouter()
@@ -23,6 +24,7 @@ urlpatterns = [
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("me/", ManageUserView.as_view(), name="manage"),
     path("logout/", LogoutView.as_view(), name="logout"),
+    path("liked-posts/", LikeList.as_view(), name="liked-posts"),
     path("", include(router.urls)),
 ]
 
