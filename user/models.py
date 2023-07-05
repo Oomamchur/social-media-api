@@ -101,6 +101,10 @@ class Post(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     media_image = models.ImageField(null=True, upload_to=post_image_file_path)
 
+    @property
+    def comments_count(self):
+        return self.comments.count()
+
     class Meta:
         ordering = ["-created_at"]
 
@@ -116,6 +120,7 @@ class Comment(models.Model):
         related_name="comments",
         on_delete=models.CASCADE
     )
+    text = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

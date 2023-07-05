@@ -114,8 +114,8 @@ class PostListSerializer(PostSerializer):
 
     class Meta:
         model = Post
-        fields = ("id", "hashtag", "text", "user_username", "media_image")
+        fields = ("id", "hashtag", "text", "user_username", "media_image", "comments_count")
 
 
-class PostDetailSerializer(PostSerializer):
-    user = UserListSerializer(many=False, read_only=True)
+class PostDetailSerializer(PostListSerializer):
+    pass
