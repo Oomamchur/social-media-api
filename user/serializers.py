@@ -155,3 +155,11 @@ class LikeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Like
         fields = ("id", "is_liked")
+
+
+class LikeListSerializer(serializers.ModelSerializer):
+    post = PostSerializer(many=False, read_only=True)
+
+    class Meta:
+        model = Like
+        fields = ("id", "user", "post")

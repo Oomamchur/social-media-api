@@ -20,12 +20,13 @@ from user.serializers import (
     AuthTokenSerializer,
     UserListSerializer,
     UserDetailSerializer,
+    UserFollowSerializer,
     PostSerializer,
     PostDetailSerializer,
     PostListSerializer,
-    UserFollowSerializer,
     CommentSerializer,
     LikeSerializer,
+    LikeListSerializer,
 )
 
 
@@ -91,8 +92,7 @@ class UserViewSet(viewsets.ModelViewSet):
         if last_name:
             queryset = queryset.filter(last_name__icontains=last_name)
 
-        if self.action in ("list", "retrieve"):
-            queryset = queryset.prefetch_related("user_follow")
+        queryset = queryset.prefetch_related("user_follow")
 
         return queryset.distinct()
 
@@ -167,7 +167,7 @@ class PostViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(user__username__icontains=username)
 
         if self.action in ("list", "retrieve"):
-            queryset = queryset.select_related("user")
+            queryset = queryset.prefetch_related("user")
 
         queryset = queryset.filter(
             Q(user=self.request.user)
@@ -214,3 +214,16 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+
+class LikeList(generics.ListAPIView):
+    queryset = Like.objects.all()
+    serializer_class = LikeListSerializer
+
+    def get_queryset(self):
+        queryset = self.queryset.select_related("post")
+        user = self.request.user
+
+        queryset = queryset.filter(user=user, is_liked=True)
+
+        return queryset
