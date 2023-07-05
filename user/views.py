@@ -66,7 +66,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return UserListSerializer
         if self.action == "retrieve":
             return UserDetailSerializer
-        if self.action == "follow":
+        if self.action in ("follow", "unfollow"):
             return UserFollowSerializer
 
         return UserSerializer
@@ -112,7 +112,7 @@ class UserViewSet(viewsets.ModelViewSet):
         url_path="unfollow",
         permission_classes=(IsAuthenticated,),
     )
-    def follow(self, request, pk=None):
+    def unfollow(self, request, pk=None):
         user = self.get_object()
         follower = self.request.user
         if follower in user.user_followers.all():
