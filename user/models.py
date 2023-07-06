@@ -58,7 +58,7 @@ class User(AbstractUser):
 
     objects = UserManager()
 
-    username = models.CharField(max_length=60)
+    username = models.CharField(max_length=60, unique=True)
     first_name = models.CharField(max_length=60)
     last_name = models.CharField(max_length=60)
     bio = models.TextField(blank=True)
@@ -91,7 +91,7 @@ def post_image_file_path(instance, filename) -> str:
 
 
 class Post(models.Model):
-    hashtag = models.CharField(max_length=60)
+    hashtag = models.CharField(max_length=60, blank=True)
     text = models.CharField(max_length=255)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
