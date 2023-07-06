@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Q
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -128,6 +129,28 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return Response(status=status.HTTP_200_OK)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="username",
+                description="Filter by username (ex. ?username=user1)",
+                type=str,
+            ),
+            OpenApiParameter(
+                name="first_name",
+                description="Filter by first_name (ex. ?first_name=Brad)",
+                type=str,
+            ),
+            OpenApiParameter(
+                name="last_name",
+                description="Filter by last_name (ex. ?last_name=Pitt)",
+                type=str,
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
 
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
@@ -214,6 +237,23 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="username",
+                description="Filter by username (ex. ?username=user1)",
+                type=str,
+            ),
+            OpenApiParameter(
+                name="hashtag",
+                description="Filter by hashtag (ex. ?hashtag=sun)",
+                type=str,
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
 class LikeList(generics.ListAPIView):
