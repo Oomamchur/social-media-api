@@ -1,5 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Q
+from django.http import Http404
+from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import generics, status, viewsets
 from rest_framework.authtoken.views import ObtainAuthToken
@@ -224,13 +226,10 @@ class PostViewSet(viewsets.ModelViewSet):
         post = self.get_object()
         user = self.request.user
         try:
-            like = Like.objects.get(post=post, user=user)
-            if like.is_liked:
-                like.is_liked = False
-            else:
-                like.is_liked = True
+            like = get_object_or_404(Like, post=post, user=user)
+            like.is_liked = not like.is_liked
             like.save()
-        except Like.DoesNotExist:
+        except Http404:
             Like.objects.create(post=post, user=user, is_liked=True)
 
         return Response(status=status.HTTP_200_OK)
